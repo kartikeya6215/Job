@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 300px; }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-bottom: 5px; color: #666; }
+        input[type="text"], input[type="date"], select { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type="file"] { margin-bottom: 15px; }
+        button { width: 100%; padding: 10px; background-color: #5c67f2; border: none; border-radius: 4px; color: white; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #4a54e1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Add New Application</h2>
+    <form id="applicationForm">
+        <label for="companyName">Company Name:</label>
+        <input type="text" id="companyName" name="companyName" required>
+
+        <label for="applyDate">Application Date:</label>
+        <input type="date" id="applyDate" name="applyDate" required>
+
+        <label for="status">Response Status:</label>
+        <select id="status" name="status">
+            <option value="Applied">Applied</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Rejected">Rejected</option>
+        </select>
+
+        <label for="resume">Upload Resume:</label>
+        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
+
+        <button type="submit">Submit Application</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('applicationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const companyName = document.getElementById('companyName').value;
+        const applyDate = document.getElementById('applyDate').value;
+        const status = document.getElementById('status').value;
+        const resumeInput = document.getElementById('resume');
+        const resumeFile = resumeInput.files[0] ? resumeInput.files[0].name : "No file";
+
+        console.log("Form Submitted!");
+        console.log("Company:", companyName);
+        console.log("Date:", applyDate);
+        console.log("Status:", status);
+        console.log("Resume File:", resumeFile);
+
+        alert("Application for " + companyName + " has been submitted! Check the console for details.");
+    });
+</script>
+
+</body>
+</html>
+
