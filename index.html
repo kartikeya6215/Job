@@ -3,228 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Application Tracker Dashboard</title>
+    <title>Professional Application Tracker Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
             --bg: #f8fafc;
             --surface: #ffffff;
-            --text: #0f172a;
+            --text: #1e293b;
             --text-muted: #64748b;
             --border: #e2e8f0;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --info: #3b82f6;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 30px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 25px; }
         
-        .dashboard-header {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border);
+            margin-bottom: 25px;
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
-
-        .dashboard-header h1 { font-size: 24px; color: var(--text); }
+        .header h1 { font-size: 22px; color: #0f172a; display: flex; align-items: center; gap: 10px; }
         
+        /* Stats Summary Counters Panel */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: var(--surface);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .stat-card h3 { font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+        .stat-card p { font-size: 24px; font-weight: 700; color: #0f172a; }
+
         .btn {
-            padding: 10px 16px;
+            padding: 10px 18px;
             border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             border: none;
             transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
         }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-hover); }
-        .btn-success { background: var(--success); color: white; }
+        .btn-excel { background: #16a34a; color: white; }
+        .btn-excel:hover { background: #15803d; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; }
+        .btn-danger:hover { background: #dc2626; }
 
         .dashboard-layout {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 30px;
-            align-items: start;
+            display: flex;
+            gap: 25px;
         }
+        
+        .panel-left { width: 340px; flex-shrink: 0; }
+        .panel-right { flex-grow: 1; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
 
-        /* Form Styling */
         .card {
             background: var(--surface);
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            border-radius: 10px;
             border: 1px solid var(--border);
-            padding: 24px;
+            padding: 20px;
         }
-        .card h2 { font-size: 18px; margin-bottom: 20px; color: var(--text); }
+        .card h2 { font-size: 16px; margin-bottom: 15px; color: #0f172a; }
         
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
         .form-control {
             width: 100%;
-            padding: 10px;
+            padding: 9px 12px;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 14px;
-            outline: none;
-            background: var(--bg);
+            background: #fafafa;
         }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .form-control:focus { border-color: var(--primary); background: #fff; outline: none; }
 
         /* Table Styling */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: var(--surface); text-align: left; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
         th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
-        th { background: #f1f5f9; font-weight: 600; color: var(--text-muted); }
+        th { background: #f8fafc; font-weight: 600; color: var(--text-muted); }
+        tr:hover { background-color: #f8fafc; }
         
         /* Status Badges */
         .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
-        .badge-applied { background: #dbeafe; color: #1e40af; }
-        .badge-progress { background: #fef3c7; color: #92400e; }
-        .badge-accepted { background: #d1fae5; color: #065f46; }
-        .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .badge-applied { background: #e0f2fe; color: #0369a1; }
+        .badge-progress { background: #fef3c7; color: #b45309; }
+        .badge-accepted { background: #d1fae5; color: #047857; }
+        .badge-rejected { background: #fee2e2; color: #b91c1c; }
 
-        .resume-link { color: var(--primary); font-weight: 600; text-decoration: none; }
+        .resume-link { color: var(--primary); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
         .resume-link:hover { text-decoration: underline; }
         
-        .actions-cell { display: flex; gap: 8px; }
+        .btn-action-delete {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid #fee2e2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .btn-action-delete:hover { background: #fee2e2; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-header">
-        <h1>💼 Job Application Tracker</h1>
-        <button class="btn btn-success" id="exportBtn">📥 Download Export (JSON)</button>
+    <div class="header">
+        <h1>💼 Job Application Analytics Center</h1>
+        <button class="btn btn-excel" id="exportExcelBtn">📥 Export Data to Excel (.xlsx)</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card" style="border-top: 4px solid var(--primary);"><h3 id="statTotalLabel">Total Applied</h3><p id="statTotal">0</p></div>
+        <div class="stat-card" style="border-top: 4px solid var(--warning);"><h3 id="statProgressLabel">In Progress</h3><p id="statProgress">0</p></div>
+        <div class="stat-card" style="border-top: 4px solid var(--success);"><h3 id="statAcceptedLabel">Selected / Offers</h3><p id="statAccepted">0</p></div>
+        <div class="stat-card" style="border-top: 4px solid var(--danger);"><h3 id="statRejectedLabel">Rejected</h3><p id="statRejected">0</p></div>
     </div>
 
     <div class="dashboard-layout">
-        <div class="card">
-            <h2 id="formTitle">Track New Application</h2>
-            <form id="appForm">
-                <input type="hidden" id="editIndex">
-                
-                <div class="form-group">
-                    <label for="companyName">Company Name</label>
-                    <input type="text" id="companyName" class="form-control" required placeholder="e.g., Google">
-                </div>
-                
-                <div class="form-group">
-                    <label for="jobRole">Job Role / Post</label>
-                    <input type="text" id="jobRole" class="form-control" required placeholder="e.g., Data Analyst">
-                </div>
-                
-                <div class="form-group">
-                    <label for="applyDate">Application Date</label>
-                    <input type="date" id="applyDate" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="status">Current Status</label>
-                    <select id="status" class="form-control">
-                        <option value="Applied">Applied</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Accepted">Accepted</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="resumeFile">Upload Resume</label>
-                    <input type="file" id="resumeFile" class="form-control" accept=".pdf,.doc,.docx">
-                    <small style="color: var(--text-muted); display:block; margin-top:4px;">Leaving empty keeps original file during edits.</small>
-                </div>
+        <div class="panel-left">
+            <div class="card">
+                <h2>Log New Application</h2>
+                <form id="appForm">
+                    <div class="form-group">
+                        <label for="companyName">Company Name</label>
+                        <input type="text" id="companyName" class="form-control" required placeholder="e.g., Google">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobRole">Job Role / Profile Domain</label>
+                        <input type="text" id="jobRole" class="form-control" required placeholder="e.g., Data Analyst">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="applyDate">Application Date</label>
+                        <input type="date" id="applyDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">Current Status</label>
+                        <select id="status" class="form-control">
+                            <option value="Applied">Applied</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resumeFile">Attach Resume Document</label>
+                        <input type="file" id="resumeFile" class="form-control" accept=".pdf,.doc,.docx" required>
+                    </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="submitBtn">Save Application</button>
-            </form>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 5px;">Submit Record</button>
+                </form>
+            </div>
         </div>
 
-        <div class="card" style="padding: 0; overflow: hidden;">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Company</th>
-                            <th>Role</th>
-                            <th>Date Applied</th>
-                            <th>Status</th>
-                            <th>Resume Asset</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="appTableBody">
-                        </tbody>
-                </table>
-            </div>
+        <div class="panel-right">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Profile Domain</th>
+                        <th>Applied Date</th>
+                        <th>Status Status</th>
+                        <th>Resume Linked Asset</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="appTableBody">
+                    </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        // System state initialized from LocalStorage
-        let applications = JSON.parse(localStorage.getItem('job_applications')) || [];
+        // System state array loaded from browser LocalStorage
+        let records = JSON.parse(localStorage.getItem('tracker_records')) || [];
         const appForm = document.getElementById('appForm');
         const tableBody = document.getElementById('appTableBody');
-        const exportBtn = document.getElementById('exportBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        const formTitle = document.getElementById('formTitle');
-        const editIndexInput = document.getElementById('editIndex');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
 
-        // Render runtime table data
-        function renderTable() {
+        // Render runtime elements and calculate live counter statistics
+        function refreshDashboard() {
             tableBody.innerHTML = '';
             
-            if(applications.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No tracked applications found. Add one on the left panel!</td></tr>`;
-                return;
+            let countTotal = records.length;
+            let countProgress = 0;
+            let countAccepted = 0;
+            let countRejected = 0;
+
+            if(records.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px; color: var(--text-muted);">No entries tracked yet. Fill out the application form to begin.</td></tr>`;
+            } else {
+                records.forEach((item, index) => {
+                    // Compute operational numbers
+                    if(item.status === 'In Progress') countProgress++;
+                    if(item.status === 'Accepted') countAccepted++;
+                    if(item.status === 'Rejected') countRejected++;
+
+                    const row = document.createElement('tr');
+                    
+                    let badgeClass = 'badge-applied';
+                    if(item.status === 'In Progress') badgeClass = 'badge-progress';
+                    if(item.status === 'Accepted') badgeClass = 'badge-accepted';
+                    if(item.status === 'Rejected') badgeClass = 'badge-rejected';
+
+                    // Convert raw base64 data to direct point-and-click browser downloads
+                    let fileMarkup = `<span style="color: var(--text-muted)">No file</span>`;
+                    if(item.fileData) {
+                        fileMarkup = `<a class="resume-link" href="${item.fileData}" download="${item.fileName}">📄 ${item.fileName}</a>`;
+                    }
+
+                    row.innerHTML = `
+                        <td style="font-weight: 600; color: #0f172a;">${escapeHtml(item.company)}</td>
+                        <td>${escapeHtml(item.role)}</td>
+                        <td>${item.date}</td>
+                        <td><span class="badge ${badgeClass}">${item.status}</span></td>
+                        <td>${fileMarkup}</td>
+                        <td style="text-align: center;">
+                            <button class="btn-action-delete" onclick="deleteRecord(${index})">Remove</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
             }
 
-            applications.forEach((app, index) => {
-                const tr = document.createElement('tr');
-                
-                // Status Badge logic
-                let badgeClass = 'badge-applied';
-                if(app.status === 'In Progress') badgeClass = 'badge-progress';
-                if(app.status === 'Accepted') badgeClass = 'badge-accepted';
-                if(app.status === 'Rejected') badgeClass = 'badge-rejected';
-
-                // File link validation
-                let fileOutput = '<span style="color:var(--text-muted)">None</span>';
-                if(app.resumeData) {
-                    fileOutput = `<a class="resume-link" href="${app.resumeData}" download="${app.resumeName}">📄 Download</a>`;
-                }
-
-                tr.innerHTML = `
-                    <td style="font-weight:600;">${escapeHtml(app.company)}</td>
-                    <td>${escapeHtml(app.role)}</td>
-                    <td>${app.date}</td>
-                    <td><span class="badge ${badgeClass}">${app.status}</span></td>
-                    <td>${fileOutput}</td>
-                    <td class="actions-cell">
-                        <button class="btn btn-primary btn-sm" onclick="editEntry(${index})">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteEntry(${index})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
+            // Update Counter Layout UI elements
+            document.getElementById('statTotal').innerText = countTotal;
+            document.getElementById('statProgress').innerText = countProgress;
+            document.getElementById('statAccepted').innerText = countAccepted;
+            document.getElementById('statRejected').innerText = countRejected;
         }
 
-        // Convert files to base64 asynchronously to safely nest within our JSON structure
-        function getBase64(file) {
+        // Convert attached local binary documents to base64 encoding strings safely
+        function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -233,7 +270,7 @@
             });
         }
 
-        // Form Submission Interception
+        // Form pipeline submission intercept handler
         appForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -242,84 +279,77 @@
             const date = document.getElementById('applyDate').value;
             const status = document.getElementById('status').value;
             const fileInput = document.getElementById('resumeFile');
-            const editIndex = editIndexInput.value;
 
-            let resumeData = "";
-            let resumeName = "";
+            let fileData = "";
+            let fileName = "";
 
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-                resumeName = file.name;
-                resumeData = await getBase64(file);
-            } else if (editIndex !== "") {
-                // If editing and no new file was provided, hold onto the old one
-                resumeData = applications[editIndex].resumeData;
-                resumeName = applications[editIndex].resumeName;
+                fileName = file.name;
+                fileData = await fileToBase64(file);
             }
 
-            const applicationEntry = { company, role, date, status, resumeData, resumeName };
-
-            if(editIndex === "") {
-                // Append Mode
-                applications.push(applicationEntry);
-            } else {
-                // Mutate/Update Mode
-                applications[editIndex] = applicationEntry;
-                // Reset form visual state
-                submitBtn.innerText = "Save Application";
-                formTitle.innerText = "Track New Application";
-                editIndexInput.value = "";
-            }
-
-            localStorage.setItem('job_applications', JSON.stringify(applications));
+            const newEntry = { company, role, date, status, fileData, fileName };
+            records.push(newEntry);
+            
+            localStorage.setItem('tracker_records', JSON.stringify(records));
             appForm.reset();
-            renderTable();
+            refreshDashboard();
         });
 
-        // Setup item fields for mutation editing
-        window.editEntry = function(index) {
-            const target = applications[index];
-            document.getElementById('companyName').value = target.company;
-            document.getElementById('jobRole').value = target.role;
-            document.getElementById('applyDate').value = target.date;
-            document.getElementById('status').value = target.status;
-            editIndexInput.value = index;
-
-            submitBtn.innerText = "Update Entry";
-            formTitle.innerText = "Modify Application Entry";
-        }
-
-        // Remove item from registry
-        window.deleteEntry = function(index) {
-            if(confirm("Are you sure you want to delete this tracked application?")) {
-                applications.splice(index, 1);
-                localStorage.setItem('job_applications', JSON.stringify(applications));
-                renderTable();
+        // Functioning clean row removal / Delete Mode feature
+        window.deleteRecord = function(index) {
+            if(confirm("Confirm deletion of this record entry row?")) {
+                records.splice(index, 1);
+                localStorage.setItem('tracker_records', JSON.stringify(records));
+                refreshDashboard();
             }
         }
 
-        // Download Entire Application Registry Bundle
-        exportBtn.addEventListener('click', function() {
-            if(applications.length === 0) {
-                alert("There are no entries to export!");
+        // Dynamic Native Excel generation engine (.xlsx format) via SheetJS
+        exportExcelBtn.addEventListener('click', function() {
+            if(records.length === 0) {
+                alert("No logged database entries found to transform into Excel.");
                 return;
             }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(applications, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "application_tracker_backup.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+
+            // Map and format rows specifically for raw Excel metrics readability
+            const formattedRows = records.map((item, idx) => ({
+                "Row ID": idx + 1,
+                "Company Name": item.company,
+                "Job Role / Domain": item.role,
+                "Application Date": item.date,
+                "Application Status": item.status,
+                "Associated File Asset Name": item.fileName
+            }));
+
+            // Initialize sheet conversion structures
+            const worksheet = XLSX.utils.json_to_sheet(formattedRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Applications Logs");
+
+            // Format internal dynamic widths for proper auto-scaling column displays
+            const maxColumnWidths = [];
+            formattedRows.forEach(row => {
+                Object.keys(row).forEach((key, colIndex) => {
+                    const cellValue = row[key] ? row[key].toString() : '';
+                    const length = Math.max(cellValue.length, key.length);
+                    maxColumnWidths[colIndex] = Math.max(maxColumnWidths[colIndex] || 0, length);
+                });
+            });
+            worksheet['!cols'] = maxColumnWidths.map(w => ({ w: w + 4 }));
+
+            // Force prompt to save real binary Excel sheet to desktop local folder
+            XLSX.writeFile(workbook, "Job_Application_Master_Tracker.xlsx");
         });
 
-        // XSS defense utility 
+        // HTML Sanitizer Utility
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Initialize display view
-        renderTable();
+        // Trigger interface refresh cycles instantly on application load
+        refreshDashboard();
     </script>
 </body>
 </html>
