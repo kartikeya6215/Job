@@ -3,64 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Tracker</title>
+    <title>Advanced Application Tracker Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 300px; }
-        h2 { text-align: center; color: #333; }
-        label { display: block; margin-bottom: 5px; color: #666; }
-        input[type="text"], input[type="date"], select { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        input[type="file"] { margin-bottom: 15px; }
-        button { width: 100%; padding: 10px; background-color: #5c67f2; border: none; border-radius: 4px; color: white; font-size: 16px; cursor: pointer; }
-        button:hover { background-color: #4a54e1; }
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 30px; }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .dashboard-header h1 { font-size: 24px; color: var(--text); }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; }
+
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        /* Form Styling */
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+            padding: 24px;
+        }
+        .card h2 { font-size: 18px; margin-bottom: 20px; color: var(--text); }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: var(--bg);
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        /* Table Styling */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); text-align: left; }
+        th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background: #f1f5f9; font-weight: 600; color: var(--text-muted); }
+        
+        /* Status Badges */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-applied { background: #dbeafe; color: #1e40af; }
+        .badge-progress { background: #fef3c7; color: #92400e; }
+        .badge-accepted { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+
+        .resume-link { color: var(--primary); font-weight: 600; text-decoration: none; }
+        .resume-link:hover { text-decoration: underline; }
+        
+        .actions-cell { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Add New Application</h2>
-    <form id="applicationForm">
-        <label for="companyName">Company Name:</label>
-        <input type="text" id="companyName" name="companyName" required>
+    <div class="dashboard-header">
+        <h1>💼 Job Application Tracker</h1>
+        <button class="btn btn-success" id="exportBtn">📥 Download Export (JSON)</button>
+    </div>
 
-        <label for="applyDate">Application Date:</label>
-        <input type="date" id="applyDate" name="applyDate" required>
+    <div class="dashboard-layout">
+        <div class="card">
+            <h2 id="formTitle">Track New Application</h2>
+            <form id="appForm">
+                <input type="hidden" id="editIndex">
+                
+                <div class="form-group">
+                    <label for="companyName">Company Name</label>
+                    <input type="text" id="companyName" class="form-control" required placeholder="e.g., Google">
+                </div>
+                
+                <div class="form-group">
+                    <label for="jobRole">Job Role / Post</label>
+                    <input type="text" id="jobRole" class="form-control" required placeholder="e.g., Data Analyst">
+                </div>
+                
+                <div class="form-group">
+                    <label for="applyDate">Application Date</label>
+                    <input type="date" id="applyDate" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="status">Current Status</label>
+                    <select id="status" class="form-control">
+                        <option value="Applied">Applied</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resumeFile">Upload Resume</label>
+                    <input type="file" id="resumeFile" class="form-control" accept=".pdf,.doc,.docx">
+                    <small style="color: var(--text-muted); display:block; margin-top:4px;">Leaving empty keeps original file during edits.</small>
+                </div>
 
-        <label for="status">Response Status:</label>
-        <select id="status" name="status">
-            <option value="Applied">Applied</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Accepted">Accepted</option>
-            <option value="Rejected">Rejected</option>
-        </select>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="submitBtn">Save Application</button>
+            </form>
+        </div>
 
-        <label for="resume">Upload Resume:</label>
-        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>Date Applied</th>
+                            <th>Status</th>
+                            <th>Resume Asset</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-        <button type="submit">Submit Application</button>
-    </form>
-</div>
+    <script>
+        // System state initialized from LocalStorage
+        let applications = JSON.parse(localStorage.getItem('job_applications')) || [];
+        const appForm = document.getElementById('appForm');
+        const tableBody = document.getElementById('appTableBody');
+        const exportBtn = document.getElementById('exportBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const formTitle = document.getElementById('formTitle');
+        const editIndexInput = document.getElementById('editIndex');
 
-<script>
-    document.getElementById('applicationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const companyName = document.getElementById('companyName').value;
-        const applyDate = document.getElementById('applyDate').value;
-        const status = document.getElementById('status').value;
-        const resumeInput = document.getElementById('resume');
-        const resumeFile = resumeInput.files[0] ? resumeInput.files[0].name : "No file";
+        // Render runtime table data
+        function renderTable() {
+            tableBody.innerHTML = '';
+            
+            if(applications.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No tracked applications found. Add one on the left panel!</td></tr>`;
+                return;
+            }
 
-        console.log("Form Submitted!");
-        console.log("Company:", companyName);
-        console.log("Date:", applyDate);
-        console.log("Status:", status);
-        console.log("Resume File:", resumeFile);
+            applications.forEach((app, index) => {
+                const tr = document.createElement('tr');
+                
+                // Status Badge logic
+                let badgeClass = 'badge-applied';
+                if(app.status === 'In Progress') badgeClass = 'badge-progress';
+                if(app.status === 'Accepted') badgeClass = 'badge-accepted';
+                if(app.status === 'Rejected') badgeClass = 'badge-rejected';
 
-        alert("Application for " + companyName + " has been submitted! Check the console for details.");
-    });
-</script>
+                // File link validation
+                let fileOutput = '<span style="color:var(--text-muted)">None</span>';
+                if(app.resumeData) {
+                    fileOutput = `<a class="resume-link" href="${app.resumeData}" download="${app.resumeName}">📄 Download</a>`;
+                }
 
+                tr.innerHTML = `
+                    <td style="font-weight:600;">${escapeHtml(app.company)}</td>
+                    <td>${escapeHtml(app.role)}</td>
+                    <td>${app.date}</td>
+                    <td><span class="badge ${badgeClass}">${app.status}</span></td>
+                    <td>${fileOutput}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-primary btn-sm" onclick="editEntry(${index})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteEntry(${index})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Convert files to base64 asynchronously to safely nest within our JSON structure
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Form Submission Interception
+        appForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const company = document.getElementById('companyName').value;
+            const role = document.getElementById('jobRole').value;
+            const date = document.getElementById('applyDate').value;
+            const status = document.getElementById('status').value;
+            const fileInput = document.getElementById('resumeFile');
+            const editIndex = editIndexInput.value;
+
+            let resumeData = "";
+            let resumeName = "";
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                resumeName = file.name;
+                resumeData = await getBase64(file);
+            } else if (editIndex !== "") {
+                // If editing and no new file was provided, hold onto the old one
+                resumeData = applications[editIndex].resumeData;
+                resumeName = applications[editIndex].resumeName;
+            }
+
+            const applicationEntry = { company, role, date, status, resumeData, resumeName };
+
+            if(editIndex === "") {
+                // Append Mode
+                applications.push(applicationEntry);
+            } else {
+                // Mutate/Update Mode
+                applications[editIndex] = applicationEntry;
+                // Reset form visual state
+                submitBtn.innerText = "Save Application";
+                formTitle.innerText = "Track New Application";
+                editIndexInput.value = "";
+            }
+
+            localStorage.setItem('job_applications', JSON.stringify(applications));
+            appForm.reset();
+            renderTable();
+        });
+
+        // Setup item fields for mutation editing
+        window.editEntry = function(index) {
+            const target = applications[index];
+            document.getElementById('companyName').value = target.company;
+            document.getElementById('jobRole').value = target.role;
+            document.getElementById('applyDate').value = target.date;
+            document.getElementById('status').value = target.status;
+            editIndexInput.value = index;
+
+            submitBtn.innerText = "Update Entry";
+            formTitle.innerText = "Modify Application Entry";
+        }
+
+        // Remove item from registry
+        window.deleteEntry = function(index) {
+            if(confirm("Are you sure you want to delete this tracked application?")) {
+                applications.splice(index, 1);
+                localStorage.setItem('job_applications', JSON.stringify(applications));
+                renderTable();
+            }
+        }
+
+        // Download Entire Application Registry Bundle
+        exportBtn.addEventListener('click', function() {
+            if(applications.length === 0) {
+                alert("There are no entries to export!");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(applications, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "application_tracker_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+
+        // XSS defense utility 
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Initialize display view
+        renderTable();
+    </script>
 </body>
 </html>
-
